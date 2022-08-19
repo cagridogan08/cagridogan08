@@ -1,5 +1,5 @@
 - 👋 Hi, I’m @cagridogan08
-- 👀 I’m interested in Blazor,MAUI and WPF applications.
+- 👀 I’m interested in .NET
 - 🌱 I’m currently learning React
 - 📫 How to reach me 🔗https://www.linkedin.com/in/cagridogan08/
 

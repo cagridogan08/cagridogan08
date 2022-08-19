@@ -1,0 +1,163 @@
+stages:
+  - before_build
+  - build
+  - test
+  - deneme
+  - deploy
+  - parallel
+  - afterparallel
+
+image: mcr.microsoft.com/dotnet/sdk:latest
+
+
+variables:
+  # 1) Name of directory where restore and build objects are stored.
+  OBJECTS_DIRECTORY: 'obj'
+  # 2) Name of directory used for keeping restored dependencies.
+  NUGET_PACKAGES_DIRECTORY: 'IDC850_Simulator/IDC850_Simulator'
+  # 3) A relative path to the source code from project repository root.
+  # NOTE: Please edit this path so it matches the structure of your project!
+  SOURCE_CODE_PATH: 'IDC850_Simulator/IDC850_Simulator/IDC850_Simulator'
+cache:
+  key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
+  paths:
+    - '$SOURCE_CODE_PATH$OBJECTS_DIRECTORY/project.assets.json'
+    # 2) Other NuGet and MSBuild related files. Also needed.
+    - '$SOURCE_CODE_PATH$OBJECTS_DIRECTORY/*.csproj.nuget.*'
+    # 3) Path to the directory where restored dependencies are kept.
+    - '$NUGET_PACKAGES_DIRECTORY'
+  policy: pull-push
+
+
+before_script: ## stage joblarındaki her scriptte çalış
+  - 'dir'
+  - 'cd IDC850_Simulator'
+  - 'dir'
+  #- 'dotnet build'
+
+general_build:
+  stage: before_build
+  script:
+    - echo "General Build Job"
+build_a:
+  stage: build
+  needs: [general_build]
+  extends:
+    - general_build
+  script:
+    - echo "First Build Job"
+
+build_b:
+  stage: build
+  needs: [general_build]
+  extends:
+    - general_build
+  script:
+    - echo "Second Build Job"
+build_c:
+  stage: build
+  needs: [general_build]
+  extends:
+    - general_build
+  dependencies:  ## jobun success olması durumunda
+    - general_build
+  script:
+    - echo "Third Build Job"
+build_d:
+  stage: build
+  needs: [general_build]
+  script:
+    - echo "ttrrr"
+################################################################### test Stage
+test_a:
+  stage: test
+  needs: 
+    - ["build_a"]
+    - ["build_b"]
+    - ["build_c"]
+  script:
+    - echo "This job tests something. It will only run when all jobs in the"
+    - echo "build stage are complete."
+test_job_b:
+  stage: test
+  needs: 
+    - ["build_a"]
+    - ["build_b"]
+    - ["build_c"]
+  script:
+    - echo "Deneme Test Job 2"
+test_job_c:
+  stage: test
+  needs : [build_d]
+  script:
+    - echo "Deneme Test Job 3"
+
+################################################################### Deneme Stage
+deneme:
+  stage: deneme
+  script:
+  - echo "Deneme Stage"
+  dependencies:
+    - test_a
+  needs:
+    - ["test_a"]
+    - ["test_job_b"]  
+deneme2:
+  stage: deneme
+  script:
+  - echo "Deneme2 Stage"
+  dependencies:
+    - deneme
+  needs: [deneme]  
+deneme3 :
+  stage: deneme
+  needs: [test_job_c]
+  
+  script:
+    - echo "Deneme Stage Job 3"
+################################################################### Deploy Stage
+deploy_job_1:
+  stage: deploy
+  needs: [deneme2]
+  script:
+    - echo 'deploy1'
+deploy_job_2:
+  stage: deploy
+  needs: [deneme2]
+  script:
+    - echo "Deploy job 2 started"
+    - sleep 10
+    - echo "Deploy job 2 finished"
+################################################################### parallel Stage
+parallel_jobs:
+  stage: parallel
+  needs: 
+    - [deploy_job_1]
+
+  script:
+    - echo "Testing $DISTRIBUTION on $ARCH"
+  parallel:
+    matrix:
+      - DISTRIBUTION: [rhel8, ubuntu20]
+        ARCH: [x64,x86]
+#afterparallel_jobs:
+  #stage: afterparallel
+  #parallel: 5
+  #needs: [deploy_job_2]
+  #rules:
+   # - if: $TRIGGER_JOB =="parallel_jobs"
+
+#parallel_job_1:
+ # stage: parallel
+  #needs: [deploy_job_1]
+  #script: 
+   #   - echo "parallel  job1 started"
+    #  - sleep 5
+     # - echo "parallel job1 done"
+#parallel_job_2:
+ # stage: parallel
+  #needs: [deploy_job_2]
+  #script: 
+      #- echo "parallel job2 started"
+      #- sleep 5
+      #- echo "parallel job2 done"
