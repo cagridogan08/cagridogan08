@@ -1,6 +1,6 @@
 - 👋 Hi, I’m @cagridogan08
 - 👀 I’m interested in .NET
-- 🌱 I’m currently learning React
+- 🌱 I’m currently learning ASP.NET MVC
 - 📫 How to reach me 🔗https://www.linkedin.com/in/cagridogan08/
 
 <!---
